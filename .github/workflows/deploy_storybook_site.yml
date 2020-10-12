@@ -1,0 +1,25 @@
+on: 
+  push:
+    branches:
+      -main
+
+name: Publish Storybook
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.STORYBOOK_AZURE_DEPLOY_CREDENTIALS }}
+    - name: NPM Build Storybook
+      run: npm install && npm run build-storybook
+    - name: Upload to blob static site storage
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+            az storage blob upload-batch --account-name ${{ secrets.STORYBOOK_STORAGE_ACCOUNT_NAME }} -d '$web' -s storybook-static
